@@ -6,13 +6,18 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Chest;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 public class ListenerPoste implements Listener {
 	
@@ -35,6 +40,9 @@ public class ListenerPoste implements Listener {
 	private int getNbAddresses(String name){
 		return main.getConfig().getInt("players." + name + ".nbaddresses");
 	}
+	private void modifyMsgNb(String name, String address, int nb) {
+		setMsgNb(name, address, getNbMsg(name, address)+nb);
+	}
 	
 	private void setMsgNb(String name, String address, int nb) {
 		main.getConfig().set("players." + name + ".addresses." + address, nb);
@@ -43,6 +51,9 @@ public class ListenerPoste implements Listener {
 			main.getConfig().set("players." + name + ".locations." + address, 0);
 		}
 		main.saveConf();
+		if(Bukkit.getOnlinePlayers().contains(Bukkit.getPlayer(name))) {
+			Bukkit.getPlayer(name).sendMessage("Vous avez recu un courrier chez vous : " + address);
+		}
 	}
 	private int getNbMsg(String name, String address) {
 		return main.getConfig().getInt("players." + name + ".addresses." + address);
@@ -88,6 +99,16 @@ public class ListenerPoste implements Listener {
 		Block lamp = Bukkit.getServer().getWorld(player.getWorld().getName()).getBlockAt((int)location.getX()+lampx, (int)location.getY(), (int)location.getZ()+lampz);
 		lamp.setType(Material.AIR);
 	}
+	private int testinventory(Inventory inventory, ItemStack item){
+		for(int i = 0 ; i < 27 ; i++) {
+			if(inventory.getItem(i) == null) {
+				return i;
+			}else if(inventory.getItem(i).equals(item)){
+				return -1;
+			}
+		}
+		return -1;
+	}
 	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
@@ -110,6 +131,8 @@ public class ListenerPoste implements Listener {
 			}
 		}
 	}
+	
+	
 	@EventHandler
 	public void clic(PlayerInteractEvent event) {
 		Action action = event.getAction();
@@ -131,7 +154,23 @@ public class ListenerPoste implements Listener {
 						}
 					}else {
 						if(action == Action.RIGHT_CLICK_BLOCK) {
-							if(!isop(player)) {
+							ItemStack item = event.getItem();
+							if(item != null && item.getType() == Material.WRITTEN_BOOK) {
+								Chest chest = (Chest) block.getState();
+								Inventory inventory = chest.getBlockInventory();
+								ItemStack item2 = item.clone();
+								item2.setAmount(1);
+								int pos = testinventory(inventory, item2);
+								event.setCancelled(true);
+								if(pos == -1 || pos > 26) {
+									player.sendMessage("Impossible de poster cette lettre, elle doit deja avoir ete postee, ou la boite est pleine.");
+								}else {
+									item.setAmount(item.getAmount()-1);
+									inventory.setItem(pos, item2);
+									player.sendMessage("Votre courrier a bien ete poste !");
+									modifyMsgNb(infos.name, infos.address, 1);
+								}
+							}else if(!isop(player)) {
 								event.setCancelled(true);
 								player.sendMessage("Vous n'avez pas acces a cette boite aux lettres");
 							}else {
@@ -147,6 +186,24 @@ public class ListenerPoste implements Listener {
 							}
 						}
 					}
+				}
+			}
+		}
+	}
+	@EventHandler
+	public void onClick(InventoryClickEvent event) {
+		Inventory inventory = event.getInventory();
+		nameaddr infos = getchestloc(inventory.getLocation());
+		if(infos.name != "") {
+			Player player = (Player)event.getWhoClicked();
+			InventoryAction action = event.getAction();
+			if(!infos.name.equals(player.getName()) && inventory.getClass().getName().equals("Chest")) {
+				if(action == InventoryAction.COLLECT_TO_CURSOR) {
+					modifyMsgNb(infos.name, infos.address, -1);
+				}else if(action == InventoryAction.PICKUP_ONE) {
+					modifyMsgNb(infos.name, infos.address, -1);
+				}else if(action == InventoryAction.PLACE_ONE) {
+					modifyMsgNb(infos.name, infos.address, 1);
 				}
 			}
 		}
