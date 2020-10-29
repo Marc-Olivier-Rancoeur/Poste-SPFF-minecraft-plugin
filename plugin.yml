@@ -1,0 +1,15 @@
+name: la-poste
+version: ALPHA-0.2.5
+author: bigbosses07
+website: https://www.spff.fr
+api-version: 1.16
+main: fr.bigbosses07.laposte.laposte
+commands:
+  poste:
+    description: Commande pour le plugin de la poste pour toutes les interractions.
+    usage: /<command> <player> address <arguments>
+    permission: poste.use
+  cheh:
+    description: CHEH
+    usage: t'avais qu'a savoir l'utiliser CHEH
+    permission: poste.cheh

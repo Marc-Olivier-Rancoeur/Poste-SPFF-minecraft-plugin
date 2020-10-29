@@ -1,0 +1,23 @@
+####################
+#                  #
+#   Poste Config   #
+#                  #
+####################
+players:
+  bigbosses07:
+    nbaddresses: 2
+    addresses:
+      ici: 0
+      enCesLieux: 0
+    locations:
+      ici:
+        x: 1000000000
+        y: 0
+        z: 0
+      enCesLieux:
+        x: 1000000000
+        y: 0
+        z: 0
+  magukerman:
+    nbaddresses: 0
+    addresses:
