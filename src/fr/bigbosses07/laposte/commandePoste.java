@@ -122,17 +122,18 @@ public class commandePoste implements CommandExecutor, TabCompleter{
 							block.setType(Material.CHEST);
 							int lampx = 0;
 							int lampz = 0;
+							System.out.println(yaw);
 							BlockData data = block.getBlockData();
-							if(yaw > -45 || yaw <= -315) {
+							if(((yaw > -45 || yaw <= -315) && yaw < 0) || ((yaw >= 315 || yaw < 45) && yaw > 0)) {
 								((Directional)data).setFacing(BlockFace.NORTH);
 								lampz = 1;
-							}else if(yaw > -135 && yaw <= -45) {
+							}else if((yaw > -135 && yaw <= -45) || (yaw > 225 && yaw < 315)) {
 								((Directional)data).setFacing(BlockFace.WEST);
 								lampx = 1;
-							}else if(yaw > -225 && yaw < -135) {
+							}else if((yaw > -225 && yaw <= -135) || (yaw > 135 && yaw <= 225)) {
 								((Directional)data).setFacing(BlockFace.SOUTH);
 								lampz = -1;
-							}else if(yaw > -315 && yaw < -225) {
+							}else if((yaw > -315 && yaw <= -225) || (yaw > 45 && yaw <= 135)) {
 								((Directional)data).setFacing(BlockFace.EAST);
 								lampx = -1;
 							}
@@ -170,6 +171,8 @@ public class commandePoste implements CommandExecutor, TabCompleter{
 				player.sendMessage("Il n'y a pas de §7" + args[0] + " §fdans ce monde.");
 				return false;
 			}
+		}else {
+			return false;
 		}
 		return true;
 	}

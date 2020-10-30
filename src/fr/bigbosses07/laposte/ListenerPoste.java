@@ -8,6 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.Lightable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -53,6 +54,27 @@ public class ListenerPoste implements Listener {
 		if(Bukkit.getOnlinePlayers().contains(Bukkit.getPlayer(name))) {
 			Bukkit.getPlayer(name).sendMessage("Vous avez recu un courrier chez vous : " + address);
 		}
+	}
+	private void updateLight(Player player, Block block) {
+		Location location = block.getLocation();
+		Directional directional = (Directional)block.getBlockData();
+		BlockFace blockface = directional.getFacing();
+		int lampx = 0;
+		int lampz = 0;
+		if(blockface == BlockFace.NORTH) {
+			lampz = 1;
+		}else if(blockface == BlockFace.WEST){
+			lampx = 1;
+		}else if(blockface == BlockFace.SOUTH){
+			lampz = -1;
+		}else if(blockface == BlockFace.EAST){
+			lampx = -1;
+		}
+		Block lamp = Bukkit.getServer().getWorld(player.getWorld().getName()).getBlockAt((int)location.getX()+lampx, (int)location.getY(), (int)location.getZ()+lampz);
+		lamp.setType(Material.REDSTONE_LAMP);
+		Lightable lightable = (Lightable)lamp.getBlockData();
+		lightable.setLit(true);
+		lamp.setBlockData(lightable);
 	}
 	private int getNbMsg(String name, String address) {
 		return main.getConfig().getInt("players." + name + ".addresses." + address);
@@ -177,6 +199,7 @@ public class ListenerPoste implements Listener {
 									inventory.setItem(pos, item2);
 									player.sendMessage("Votre courrier a bien ete poste !");
 									modifyMsgNb(infos.name, infos.address, 1);
+									updateLight(player, block);
 								}
 							}else if(!isop(player)) {
 								event.setCancelled(true);
@@ -201,11 +224,16 @@ public class ListenerPoste implements Listener {
 	@EventHandler
 	public void onClick(InventoryClickEvent event) {
 		Inventory inventory = event.getInventory();
-		nameaddr infos = getchestloc(inventory.getLocation());
+		Location location = inventory.getLocation();
+		nameaddr infos = getchestloc(location);
 		if(infos.name != "") {
 			Player player = (Player)event.getWhoClicked();
 			if(!infos.name.equals(player.getName())) {
-				modifyMsgNb(infos.name, infos.address, getNbObj(inventory));
+				int nb = getNbObj(inventory);
+				setMsgNb(infos.name, infos.address, nb);
+				if(nb > 0) {
+					updateLight(player, location.getBlock());
+				}
 			}
 		}
 	}
