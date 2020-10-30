@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -57,6 +56,15 @@ public class ListenerPoste implements Listener {
 	}
 	private int getNbMsg(String name, String address) {
 		return main.getConfig().getInt("players." + name + ".addresses." + address);
+	}
+	private int getNbObj(Inventory inventory) {
+		int objs = 0;
+		for(int i = 0 ; i < 27 ; i++) {
+			if(inventory.getItem(i) != null) {
+				objs+=1;
+			}
+		}
+		return objs;
 	}
 	
 	private nameaddr getchestloc(Location loc) {
@@ -196,15 +204,8 @@ public class ListenerPoste implements Listener {
 		nameaddr infos = getchestloc(inventory.getLocation());
 		if(infos.name != "") {
 			Player player = (Player)event.getWhoClicked();
-			InventoryAction action = event.getAction();
-			if(!infos.name.equals(player.getName()) && inventory.getClass().getName().equals("Chest")) {
-				if(action == InventoryAction.COLLECT_TO_CURSOR) {
-					modifyMsgNb(infos.name, infos.address, -1);
-				}else if(action == InventoryAction.PICKUP_ONE) {
-					modifyMsgNb(infos.name, infos.address, -1);
-				}else if(action == InventoryAction.PLACE_ONE) {
-					modifyMsgNb(infos.name, infos.address, 1);
-				}
+			if(!infos.name.equals(player.getName())) {
+				modifyMsgNb(infos.name, infos.address, getNbObj(inventory));
 			}
 		}
 	}
